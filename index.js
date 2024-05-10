@@ -48,22 +48,16 @@ const broadcastTypes = {
 
 
 io.on('connection', (socket) => {
-  console.log(`User is connected with id: ${socket.id}`);
-
   socket.emit('connection');
-
-  // #region video
 
   socket.on('register-new-user', (newUser) => {
     peers.push(newUser);
-    // console.log('new user', peers);
 
     handleBroadcast(peers, broadcastTypes.ACTIVE_USERS);
     handleBroadcast(groupCallRooms, broadcastTypes.GROUP_CALL_ROOMS);
   });
 
   socket.on('disconnect', () => {
-    // console.log('user was disconnected', socket.id);
     const filteredPeers = peers.filter(peer => peer.socketId !== socket.id);
     peers = filteredPeers;
     handleBroadcast(peers, broadcastTypes.ACTIVE_USERS);
@@ -73,7 +67,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('pre-offer', (data) => {
-    // console.log('pre offer data', data);
     io.to(data.callee.socketId).emit('pre-offer', {
       callerSocketId: socket.id,
       callerUserName: data.caller.username,
@@ -81,35 +74,26 @@ io.on('connection', (socket) => {
   });
 
   socket.on('pre-offer-answer', (data) => {
-    // console.log('server pre-offer-answer', data);
     io.to(data.callerSocketId).emit('pre-offer-answer', {
       answer: data.answer,
     });
   });
 
   socket.on('webRTC-offer', (data) => {
-    // console.log('web rtc offer', data);
     io.to(data.calleeSocketId).emit('webRTC-offer', { offer: data.offer });
   });
 
   socket.on('webRTC-answer', (data) => {
-    // console.log('web rtc answer', data);
     io.to(data.callerSocketId).emit('webRTC-answer', { answer: data.answer });
   });
 
   socket.on('webRTC-candidate', (data) => {
-    // console.log('webRTC-candidate', data);
     io.to(data.connectedUserSocketId).emit('webRTC-candidate', { candidate: data.candidate });
   });
 
   socket.on('user-hang-up', (data) => {
-    // console.log('user-hang-up', data);
     io.to(data.connectedUserSocketId).emit('user-hang-up');
   });
-
-  // #endregion
-
-  // #region group call
 
   socket.on('grop-call-register', (data) => {
     const roomId = uuidv4();
@@ -147,8 +131,6 @@ io.on('connection', (socket) => {
     groupCallRooms = groupCallRooms.filter(room => room.peerId !== data.peerId);
     handleBroadcast(groupCallRooms, broadcastTypes.GROUP_CALL_ROOMS);
   });
-
-  // #endregion
 });
 
 const handleBroadcast = (data, eventType) => {
